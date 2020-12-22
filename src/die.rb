@@ -17,9 +17,11 @@ class Die
 
     @sides = sides
     @rng = Random.new
+    @result = nil
   end
 
   def roll
-    @rng.rand(@sides - 1) + 1
+    @result = @rng.rand(@sides - 1) + 1 if @result.nil?
+    @result
   end
 end
