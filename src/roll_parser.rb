@@ -17,7 +17,9 @@ class RollParser
 
     # eval is kind of evil so let's limit what it will take
     rolled_string = replace_rolls @text_roll
-    raise EvalPreventionError, "Unsafe to evaluate #{rolled_string}" unless (rolled_string =~ /[a-zA-Z_:,%\u0040-\uFFFF]/).nil?
+    unless (rolled_string =~ /[a-zA-Z_:,%\u0040-\uFFFF]/).nil?
+      raise EvalPreventionError, "Unsafe to evaluate #{rolled_string}"
+    end
 
     evaluation_roll = eval(rolled_string)
     @logger.info("#{@text_roll} => #{evaluation_roll}")
@@ -27,24 +29,30 @@ class RollParser
   private
 
   def replace_rolls(text_roll)
-    rolled_string = text_roll.dup        # the string should be non-frozen
+    rolled_string = text_roll.dup # the string should be non-frozen
     die_with_modifier = rolled_string[/(ADV|DIS)?(\(\d+D\d+\))|(\d+D\d+)/]
     until die_with_modifier.nil?
-      die = die_with_modifier[/\d+D\d+/]
-      parts = die.split 'D'
-      roll = Roll.new parts[0].to_i, parts[1].to_i, extract_modifier(die_with_modifier)
-      rolled_string[die_with_modifier] = roll.execute.to_s
-      @logger.debug("#{die} rolled; #{text_roll} => #{rolled_string}")
+      rolled_value = roll_based_on_die_with_modifier(die_with_modifier)
+      rolled_string[die_with_modifier] = rolled_value
+      @logger.debug("#{die_with_modifier} rolled; #{text_roll} => #{rolled_string}")
       die_with_modifier = rolled_string[/(ADV|DIS)?(\(\d+D\d+\))|(\d+D\d+)/]
     end
     rolled_string
   end
-end
 
-def extract_modifier(die_with_modifier)
-  return nil if die_with_modifier.index('DIS').nil? && die_with_modifier.index('ADV').nil?
+  def roll_based_on_die_with_modifier(die_with_modifier)
+    die = die_with_modifier[/\d+D\d+/]
+    parts = die.split 'D'
+    roll = Roll.new parts[0].to_i, parts[1].to_i, extract_modifier(die_with_modifier)
+    roll.execute.to_s
+  end
 
-  die_with_modifier.index('ADV').is_a? Numeric # string contains either dis or adv, so if adv returns nil, it should be dis which is false
+  def extract_modifier(die_with_modifier)
+    return nil if die_with_modifier.index('DIS').nil? && die_with_modifier.index('ADV').nil?
+
+    # string contains either dis or adv, so if adv returns nil, it should be dis which is false
+    die_with_modifier.index('ADV').is_a? Numeric
+  end
 end
 
 class MismatchedBracesError < StandardError

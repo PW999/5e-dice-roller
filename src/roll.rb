@@ -38,7 +38,7 @@ class Roll
   private
 
   def roll_extra_die
-    return if @extra_die.nil? 
+    return if @extra_die.nil?
 
     rolled_value = @extra_die.roll
     @logger.debug("Extra roll was #{rolled_value}")
@@ -70,14 +70,14 @@ class Roll
   end
 
   def set_advantage
-    if !@extra_die.nil?
-      unless @extra_die_advantage   # if you already have disadvantage, then advantage cancels it out
+    if @extra_die.nil?
+      @extra_die = Die.new(@sides)
+      @extra_die_advantage = true
+    else
+      unless @extra_die_advantage # if you already have disadvantage, then advantage cancels it out
         @extra_die = nil
         @extra_die_advantage = nil
       end
-    else
-      @extra_die = Die.new(@sides)
-      @extra_die_advantage = true
     end
   end
 
