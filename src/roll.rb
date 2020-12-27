@@ -5,6 +5,10 @@ require_relative 'log_config'
 
 ##
 # Represent rolling a die with modifiers
+# The advantage parameter accepts three options
+# * true -> roll with advantage
+# * nil -> a normal roll
+# * false -> roll with disadvantage
 #
 class Roll
   def initialize(number_of_dice, sides, advantage)
